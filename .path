@@ -1,0 +1,2 @@
+#add javahome to path
+export PATH="$HOME/bin:${JAVA_HOME}/bin:$PATH";

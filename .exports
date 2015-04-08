@@ -19,3 +19,7 @@ export MANPAGER='less -X';
 
 # Always enable colored `grep` output.
 export GREP_OPTIONS='--color=auto';
+
+export JAVA_HOME=$(/usr/libexec/java_home);
+export RESIN_HOME='/users/nnieslanik/resin-4.0.43';
+export MYSTRENGTH_HOME='/users/nnieslanik/src/mystrength';
