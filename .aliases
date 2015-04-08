@@ -15,6 +15,11 @@ alias g="git"
 alias h="history"
 alias j="jobs"
 
+#myStrength SSH
+alias cloud1="ssh nnieslanik@cloud1.mystrength"
+alias stagedb="ssh nnieslanik@stagedb.mystrength"
+alias proddb="ssh nnieslanik@proddb.mystrength"
+
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
 	colorflag="--color"
