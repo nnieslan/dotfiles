@@ -19,6 +19,7 @@ alias j="jobs"
 alias cloud1="ssh nnieslanik@cloud1.mystrength"
 alias stagedb="ssh nnieslanik@stagedb.mystrength"
 alias proddb="ssh nnieslanik@proddb.mystrength"
+alias cms="ssh nnieslanik@cms.mystrength"
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
