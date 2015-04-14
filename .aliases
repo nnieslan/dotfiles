@@ -21,6 +21,9 @@ alias stagedb="ssh nnieslanik@stagedb.mystrength"
 alias proddb="ssh nnieslanik@proddb.mystrength"
 alias cms="ssh nnieslanik@cms.mystrength"
 
+alias mysql_stage="mysql -u nnieslanik -p -h stagedb.mystrength"
+alias mysql_prod="mysql -u nnieslanik -p -h proddb.mystrength"
+
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
 	colorflag="--color"
