@@ -197,6 +197,16 @@ function getcertnames() {
 	fi;
 }
 
+# `idea` with no args opens IntelliJ
+function idea() {
+if [ $# -eq 0 ]; then
+	"/Applications/IntelliJ IDEA 14 CE.app/Contents/MacOS/idea";
+else
+	"/Applications/IntelliJ IDEA 14 CE.app/Contents/MacOS/idea" "$@";
+fi;
+
+}
+
 # `s` with no arguments opens the current directory in Sublime Text, otherwise
 # opens the given location
 function s() {
