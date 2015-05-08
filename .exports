@@ -21,6 +21,7 @@ export MANPAGER='less -X';
 export GREP_OPTIONS='--color=auto';
 
 export JAVA_HOME=$(/usr/libexec/java_home);
-export M2_HOME='/users/nnieslanik/.m2';
+export M2_HOME='/usr/local/Cellar/maven32/3.2.5/libexec';
 export RESIN_HOME='/users/nnieslanik/resin-4.0.43';
 export MYSTRENGTH_HOME='/users/nnieslanik/src/mystrength';
+export ANT_HOME='/usr/local/Cellar/ant/1.9.4/libexec';
