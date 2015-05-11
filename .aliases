@@ -14,6 +14,10 @@ alias src="cd ~/src"
 alias g="git"
 alias h="history"
 alias j="jobs"
+alias api="cd ~/src/myStrengthApi"
+alias admin="cd ~/src/myStrengthNewAdmin"
+alias jsp="cd ~/src/mystrength"
+alias dotfiles="cd ~/src/dotfiles"
 
 #myStrength SSH
 alias cloud1="ssh nnieslanik@cloud1.mystrength"

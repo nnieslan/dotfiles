@@ -254,3 +254,11 @@ function o() {
 function tre() {
 	tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
 }
+
+function mvv() {
+	if [ $# -eq 0 ]; then
+		mvn versions:set -DgenerateBackupPoms=false -DautoVersionSubmodules=true;
+	else
+		mvn versions:set -DnewVersion=$@ -DgenerateBackupPoms=false -DautoVersionSubmodules=true;
+	fi;
+}
