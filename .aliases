@@ -17,6 +17,7 @@ alias j="jobs"
 alias api="cd ~/src/myStrengthApi"
 alias admin="cd ~/src/myStrengthNewAdmin"
 alias jsp="cd ~/src/mystrength"
+alias app="cd ~/src/mystrength-UX"
 alias dotfiles="cd ~/src/dotfiles"
 
 #myStrength SSH
@@ -42,7 +43,7 @@ alias mysql_dtsdb1="mysql -u nnieslanik -p -h dtsdb1.mystrength"
 alias mysql_prod1="mysql -u nnieslanik -p -h proddb1.mystrength"
 alias mysql_prod2="mysql -u nnieslanik -p -h proddb2.mystrength"
 
-alias startdocker="boot2docker start && eval '$(boot2docker shellinit)'"
+alias startdocker="boot2docker start && eval '$(boot2docker shellinit)' && docker start elk && docker start logstash_forward && docker start nginx && docker start voldemort.mystrength.dev && docker start cassandra.mystrength.dev"
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`

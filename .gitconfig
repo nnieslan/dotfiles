@@ -18,6 +18,9 @@
 	#difftool for staged stuff
 	dtc = difftool --cached
 
+	#difftool ALL against HEAD in directory view
+	dtd = difftool -d --no-symlinks -y HEAD
+
 	# Pull in remote changes for the current repository and all its submodules
 	p = !"git pull; git submodule foreach git pull origin master"
 

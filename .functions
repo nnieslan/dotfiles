@@ -262,3 +262,58 @@ function mvv() {
 		mvn versions:set -DnewVersion=$@ -DgenerateBackupPoms=false -DautoVersionSubmodules=true;
 	fi;
 }
+
+function buildapi() {
+	if [ -z "${1}" ]; then
+		echo "ERROR: No docker tag specified.";
+		return 1;
+	fi;
+	local dockertag="${1}";
+	local ip=$(ipconfig getifaddr en0);
+
+	echo "Local IP Address is ${ip}"
+	echo "Building Tag ${dockertag}"
+	mvn versions:set -DnewVersion=${dockertag} \
+	 -DgenerateBackupPoms=false \
+	 -DautoVersionSubmodules=true
+
+	mvn clean install -DskipTests=true \
+	 && docker build -t mystrength/api:${dockertag} .
+	docker rm -f $(docker ps -a | grep api.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
+	docker run -d -t  -p 9081:9081 -p 5050:5050  \
+	 	--add-host=db.mystrength.dev:${ip} \
+		--volumes-from logstash_forward  \
+		-e "MYSTRENGTH_ENV=NNieslanik" \
+		-e VIRTUAL_HOST=api.mystrength.dev \
+		-e VIRTUAL_PORT=9080 \
+		-e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
+		-h api.mystrength.dev  --name api.mystrength.dev \
+		--link nginx:gemini.mystrength.dev \
+		--link cassandra.mystrength.dev:cassandra.mystrength.dev \
+		mystrength/api:${dockertag}
+}
+
+function runapi() {
+if [ -z "${1}" ]; then
+	echo "ERROR: No docker tag specified.";
+	return 1;
+fi;
+local dockertag="${1}";
+local ip=$(ipconfig getifaddr en0);
+
+echo "Local IP Address is ${ip}"
+echo "Running Tag ${dockertag}"
+
+docker rm -f $(docker ps -a | grep api.mystrength.dev | awk '{print $1}') > /dev/null 2>&1
+docker run -d -t  -p 9081:9081 -p 5050:5050  \
+	--add-host=db.mystrength.dev:${ip} \
+	--volumes-from logstash_forward  \
+	-e "MYSTRENGTH_ENV=NNieslanik" \
+	-e VIRTUAL_HOST=api.mystrength.dev \
+	-e VIRTUAL_PORT=9080 \
+	-e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
+	-h api.mystrength.dev  --name api.mystrength.dev \
+	--link nginx:gemini.mystrength.dev \
+	--link cassandra.mystrength.dev:cassandra.mystrength.dev \
+	mystrength/api:${dockertag}
+}

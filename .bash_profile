@@ -9,6 +9,13 @@ for file in ~/.{bash_prompt,exports,path,aliases,functions,extra}; do
 done;
 unset file;
 
+#start up boot2docker if necessary, else just set env for it
+if [ "$(boot2docker status)" == 'running' ]; then
+	eval '$(boot2docker shellinit)';
+else
+	$(startdocker);
+fi;
+
 # Case-insensitive globbing (used in pathname expansion)
 shopt -s nocaseglob;
 
