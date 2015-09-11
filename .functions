@@ -263,6 +263,29 @@ function mvv() {
 	fi;
 }
 
+function buildapp() {
+	if [ -z "${1}" ]; then
+		echo "ERROR: No docker tag specified.";
+		return 1;
+	fi;
+	local dockertag="${1}";
+	local ip=$(ipconfig getifaddr en0);
+
+	echo "Local IP Address is ${ip}"
+	echo "Building Tag ${dockertag}"
+
+	gulp && docker build -t mystrength/app:${dockertag} .
+	docker rm -f $(docker ps -a | grep app.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
+	docker run -d -t \
+	 	-e "MYSTRENGTH_ENV=dev" \
+		-e VIRTUAL_HOST=app.mystrength.dev \
+		-e VIRTUAL_PORT=80 \
+		-h app.mystrength.dev  --name app.mystrength.dev \
+		--link nginx:api.mystrength.dev \
+		mystrength/app:${dockertag}
+}
+
+
 function buildapi() {
 	if [ -z "${1}" ]; then
 		echo "ERROR: No docker tag specified.";
@@ -277,7 +300,7 @@ function buildapi() {
 	 -DgenerateBackupPoms=false \
 	 -DautoVersionSubmodules=true
 
-	mvn clean install -DskipTests=true \
+	mvn clean install -DskipITs=true \
 	 && docker build -t mystrength/api:${dockertag} .
 	docker rm -f $(docker ps -a | grep api.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
 	docker run -d -t  -p 9081:9081 -p 5050:5050  \
@@ -316,4 +339,33 @@ docker run -d -t  -p 9081:9081 -p 5050:5050  \
 	--link nginx:gemini.mystrength.dev \
 	--link cassandra.mystrength.dev:cassandra.mystrength.dev \
 	mystrength/api:${dockertag}
+}
+
+function buildgemini() {
+
+if [ -z "${1}" ]; then
+	echo "ERROR: No docker tag specified.";
+	return 1;
+fi;
+local dockertag="${1}";
+local ip=$(ipconfig getifaddr en0);
+
+echo "Local IP Address is ${ip}"
+echo "Building and Running Tag ${dockertag}"
+mvn clean compile jar:jar package \
+	&& ant \
+	&& docker build -t mystrength/gemini:${dockertag} .
+docker rm -f $(docker ps -a | grep gemini.mystrength.dev | awk '{print $1}') > /dev/null 2>&1
+docker run -d -t -p 5051:5051 -p 5005:5005 -p 6810:6810  \
+	--volumes-from=data.mystrength.dev --volumes-from=logstash_forward  \
+	--add-host=db.mystrength.dev:${ip} \
+	-e "MYSTRENGTH_ENV=NNieslanik" \
+	-e "DEBUG_MODE=true" \
+	-h gemini.mystrength.dev \
+	--name gemini.mystrength.dev \
+	-e VIRTUAL_HOST=gemini.mystrength.dev -e VIRTUAL_PORT=8080 \
+	--link=voldemort.mystrength.dev:voldemort.mystrength.dev \
+	--link nginx:api.mystrength.dev \
+	mystrength/gemini:${dockertag} debug
+
 }
