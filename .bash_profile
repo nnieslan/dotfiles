@@ -5,16 +5,23 @@
 # * ~/.path can be used to extend `$PATH`.
 # * ~/.extra can be used for other settings you don’t want to commit.
 for file in ~/.{bash_prompt,exports,path,aliases,functions,extra}; do
-	[ -r "$file" ] && [ -f "$file" ] && source "$file";
+  [ -r "$file" ] && [ -f "$file" ] && source "$file";
 done;
 unset file;
 
-#start up boot2docker if necessary, else just set env for it
-#if [ "$(boot2docker status)" == 'running' ]; then
-#	eval '$(boot2docker shellinit)';
-#else
-#	$(startdocker);
-#fi;
+set dockerstate = echo "$(docker-machine status mystrength)"
+echo "$dockerstate"
+#start up docker-machine if necessary, else just set env for it
+if [ "$(docker-machine status mystrength)" == 'Running' ]; then
+  echo 'setting docker-machine env';
+  eval $(docker-machine env mystrength);
+else
+  docker-machine start mystrength \
+    && docker-machine regenerate-certs -f mystrength \
+    && eval $(docker-machine env mystrength) \
+    && docker start nginx \
+    && docker start cassandra.mystrength.dev;
+fi;
 
 # Case-insensitive globbing (used in pathname expansion)
 shopt -s nocaseglob;
@@ -29,19 +36,19 @@ shopt -s cdspell;
 # * `autocd`, e.g. `**/qux` will enter `./foo/bar/baz/qux`
 # * Recursive globbing, e.g. `echo **/*.txt`
 for option in autocd globstar; do
-	shopt -s "$option" 2> /dev/null;
+  shopt -s "$option" 2> /dev/null;
 done;
 
 # Add tab completion for many Bash commands
 if which brew > /dev/null && [ -f "$(brew --prefix)/etc/bash_completion" ]; then
-	source "$(brew --prefix)/etc/bash_completion";
+  source "$(brew --prefix)/etc/bash_completion";
 elif [ -f /etc/bash_completion ]; then
-	source /etc/bash_completion;
+  source /etc/bash_completion;
 fi;
 
 # Enable tab completion for `g` by marking it as an alias for `git`
 if type _git &> /dev/null && [ -f /usr/local/etc/bash_completion.d/git-completion.bash ]; then
-	complete -o default -o nospace -F _git g;
+  complete -o default -o nospace -F _git g;
 fi;
 
 # Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards

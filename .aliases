@@ -43,13 +43,14 @@ alias mysql_dtsdb1="mysql -u nnieslanik -p -h dtsdb1.mystrength"
 alias mysql_prod1="mysql -u nnieslanik -p -h proddb1.mystrength"
 alias mysql_prod2="mysql -u nnieslanik -p -h proddb2.mystrength"
 
-alias startdocker="boot2docker start && eval '$(boot2docker shellinit)' && docker start elk && docker start logstash_forward && docker start nginx && docker start voldemort.mystrength.dev && docker start cassandra.mystrength.dev"
+alias startdocker="docker-machine start mystrength && eval "$(docker-machine env mystrength)" && docker start nginx && docker start cassandra.mystrength.dev"
+
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
-	colorflag="--color"
+  colorflag="--color"
 else # OS X `ls`
-	colorflag="-G"
+  colorflag="-G"
 fi
 
 
@@ -153,7 +154,7 @@ alias map="xargs -n1"
 
 # One of @janmoesen’s ProTip™s
 for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
-	alias "$method"="lwp-request -m '$method'"
+  alias "$method"="lwp-request -m '$method'"
 done
 
 # Make Grunt print stack traces by default

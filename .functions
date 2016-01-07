@@ -363,8 +363,13 @@ docker run -d -t -p 5051:5051 -p 5005:5005 -p 6810:6810  \
   -h gemini.mystrength.dev \
   --name gemini.mystrength.dev \
   -e VIRTUAL_HOST=gemini.mystrength.dev,mystrength.dev -e VIRTUAL_PORT=8080 \
-  --link=voldemort.mystrength.dev:voldemort.mystrength.dev \
   --link nginx:api.mystrength.dev \
   mystrength/gemini:${dockertag} debug
+
+}
+
+function createBuildNumber() {
+  local versionPrefix=$(echo "2.1-SNAPSHOT" | cut -d- -f1)
+  echo "Parsed version prefix sans SNAPSHOT ${versionPrefix}"
 
 }
