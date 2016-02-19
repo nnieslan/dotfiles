@@ -368,6 +368,55 @@ docker run -d -t -p 5051:5051 -p 5005:5005 -p 6810:6810  \
 
 }
 
+function buildjobs() {
+  if [ -z "${1}" ]; then
+    echo "ERROR: No docker tag specified.";
+    return 1;
+  fi;
+  local dockertag="${1}";
+  local ip=$(ipconfig getifaddr en0);
+
+  echo "Local IP Address is ${ip}"
+  echo "Building Tag ${dockertag}"
+  mvn versions:set -DnewVersion=${dockertag} \
+   -DgenerateBackupPoms=false \
+   -DautoVersionSubmodules=true
+
+  mvn clean install -DskipITs=true;
+  pushd orchestrator;
+  docker build -t mystrength/jobs-orchestrator:${dockertag} .;
+  docker rm -f $(docker ps -a | grep jobs-orchestrator.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
+  docker run -d -t -p 5051:5051 \
+     --add-host=db.mystrength.dev:${ip} \
+    --volumes-from logging-data  \
+    -e "MYSTRENGTH_ENV=NNieslanik" \
+    -e VIRTUAL_HOST=jobs-orchestrator.mystrength.dev \
+    -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5051,server=y,suspend=y"  \
+    -h jobs-orchestrator.mystrength.dev  --name jobs-orchestrator.mystrength.dev \
+    --link nginx:api.mystrength.dev \
+    --link devrabbit:rabbit.mystrength.dev \
+    --link cassandra.mystrength.dev:cassandra.mystrength.dev \
+    mystrength/jobs-orchestrator:${dockertag};
+  popd;
+  pushd executor;
+  docker build -t mystrength/jobs-executor:${dockertag} .;
+  docker rm -f $(docker ps -a | grep jobs-executor.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
+  docker run -d -t -p 5052:5052 \
+     --add-host=db.mystrength.dev:${ip} \
+    --volumes-from logging-data  \
+    -e "MYSTRENGTH_ENV=NNieslanik" \
+    -e VIRTUAL_HOST=jobs-executor.mystrength.dev \
+    -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5052,server=y,suspend=y"  \
+    -h jobs-executor.mystrength.dev  --name jobs-executor.mystrength.dev \
+    --link nginx:api.mystrength.dev \
+    --link devrabbit:rabbit.mystrength.dev \
+    --link cassandra.mystrength.dev:cassandra.mystrength.dev \
+    mystrength/jobs-executor:${dockertag};
+  popd;
+
+}
+
+
 function createBuildNumber() {
   local versionPrefix=$(echo "2.1-SNAPSHOT" | cut -d- -f1)
   echo "Parsed version prefix sans SNAPSHOT ${versionPrefix}"
