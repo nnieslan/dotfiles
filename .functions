@@ -422,3 +422,13 @@ function createBuildNumber() {
   echo "Parsed version prefix sans SNAPSHOT ${versionPrefix}"
 
 }
+
+# Change cd function to enable to "back directory"
+function cd() {
+        if [ $# -lt 1 ]; then
+                pushd ~ > /dev/null
+        else
+                pushd "$@" > /dev/null
+        fi
+}
+alias bd='popd > /dev/null; pwd'
