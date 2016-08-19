@@ -10,18 +10,18 @@ done;
 unset file;
 
 set dockerstate = echo "$(docker-machine status mystrength)"
-echo "$dockerstate"
+echo "Docker-Machine Status : $dockerstate"
 #start up docker-machine if necessary, else just set env for it
-if [ "$(docker-machine status mystrength)" == 'Running' ]; then
-  echo 'setting docker-machine env';
-  eval $(docker-machine env mystrength);
-else
-  docker-machine start mystrength \
-    && docker-machine regenerate-certs -f mystrength \
-    && eval $(docker-machine env mystrength) \
-    && docker start nginx \
-    && docker start cassandra.mystrength.dev;
-fi;
+#if [ "$(docker-machine status mystrength)" == 'Running' ]; then
+#  echo 'setting docker-machine env';
+#  eval $(docker-machine env mystrength);
+#else
+#  docker-machine start mystrength \
+#    && docker-machine regenerate-certs -f mystrength \
+#    && eval $(docker-machine env mystrength) \
+#    && docker start nginx \
+#    && docker start cassandra.mystrength.dev;
+#fi;
 
 # Case-insensitive globbing (used in pathname expansion)
 shopt -s nocaseglob;
