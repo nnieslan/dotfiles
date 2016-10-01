@@ -19,13 +19,10 @@ alias admin="cd ~/src/myStrengthNewAdmin"
 alias jobs="cd ~/src/jobs"
 alias jsp="cd ~/src/mystrength"
 alias app="cd ~/src/mystrength-UX"
+alias papi="cd ~/src/partner-api"
+alias res="cd ~/src/resources"
 alias dotfiles="cd ~/src/dotfiles"
 
-#myStrength SSH
-alias cloud1="ssh nnieslanik@cloud1.mystrength"
-alias stagedb="ssh nnieslanik@stagedb.mystrength"
-alias proddb="ssh nnieslanik@proddb.mystrength"
-alias cms="ssh nnieslanik@cms.mystrength"
 
 #new SSH
 alias dtshost="ssh nnieslanik@dtshost.mystrength"
@@ -35,15 +32,12 @@ alias prodweb2="ssh nnieslanik@prodweb2.mystrength"
 alias proddb1="ssh nnieslanik@proddb1.mystrength"
 alias proddb2="ssh nnieslanik@proddb2.mystrength"
 
-#old
-alias mysql_stage="mysql -u nnieslanik -p -h stagedb.mystrength"
-alias mysql_prod="mysql -u nnieslanik -p -h proddb.mystrength"
-
 #new
 alias mysql_dtsdb1="mysql -u nnieslanik -p -h dtsdb1.mystrength"
 alias mysql_prod1="mysql -u nnieslanik -p -h proddb1.mystrength"
 alias mysql_prod2="mysql -u nnieslanik -p -h proddb2.mystrength"
 
+#docker-machine (legacy)
 alias startdocker="docker-machine start mystrength && eval "$(docker-machine env mystrength)" && docker start nginx && docker start cassandra.mystrength.dev"
 
 

@@ -9,8 +9,8 @@ for file in ~/.{bash_prompt,exports,path,aliases,functions,extra}; do
 done;
 unset file;
 
-set dockerstate = echo "$(docker-machine status mystrength)"
-echo "Docker-Machine Status : $dockerstate"
+#set dockerstate = echo "$(docker-machine status mystrength)"
+#echo "Docker-Machine Status : $dockerstate"
 #start up docker-machine if necessary, else just set env for it
 #if [ "$(docker-machine status mystrength)" == 'Running' ]; then
 #  echo 'setting docker-machine env';

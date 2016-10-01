@@ -284,6 +284,48 @@ function buildapp() {
     mystrength/app:${dockertag}
 }
 
+function buildadmin() {
+  if [ -z "${1}" ]; then
+    echo "ERROR: No docker tag specified.";
+    return 1;
+  fi;
+  local dockertag="${1}";
+  local ip=$(ipconfig getifaddr en0);
+
+  echo "Local IP Address is ${ip}"
+  echo "Building Tag ${dockertag}"
+  nvm install 0.12.7
+  gulp && docker build -t mystrength/admin:${dockertag} .
+  docker rm -f $(docker ps -a | grep admin.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
+  docker run -d -t \
+    -e "MYSTRENGTH_ENV=dev" \
+    -e "VIRTUAL_HOST=admin.mystrength.dev,admin-gemini.mystrength.dev" \
+    -e VIRTUAL_PORT=80 \
+    -h admin.mystrength.dev  --name admin.mystrength.dev \
+    mystrength/admin:${dockertag}
+}
+
+function buildanalytics() {
+  if [ -z "${1}" ]; then
+    echo "ERROR: No docker tag specified.";
+    return 1;
+  fi;
+  local dockertag="${1}";
+  local ip=$(ipconfig getifaddr en0);
+
+  echo "Local IP Address is ${ip}"
+  echo "Building Tag ${dockertag}"
+  docker build -t mystrength/analytics:${dockertag} .
+  docker rm -f $(docker ps -a | grep mystrength_analytics | awk '{print $1}')  > /dev/null 2>&1
+  docker run -dt --name mystrength_analytics \
+       --add-host=db.mystrength.dev:${ip} \
+       -v /Users/NNieslanik/src/analytics/nightly/logs:/var/log/mystrength \
+       -v /Users/NNieslanik/src/analytics/nightly/work:/home/work \
+       -e ENV_NAME=nnieslanik \
+       --restart=on-failure:5 \
+       mystrength/analytics:${dockertag}
+}
+
 
 function buildapi() {
   if [ -z "${1}" ]; then
@@ -304,16 +346,15 @@ function buildapi() {
   docker rm -f $(docker ps -a | grep api.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t  -p 9081:9081 -p 5050:5050  \
      --add-host=db.mystrength.dev:${ip} \
-    --volumes-from logging-data  \
     -e "MYSTRENGTH_ENV=NNieslanik" \
     -e VIRTUAL_HOST=api.mystrength.dev \
     -e VIRTUAL_PORT=9080 \
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
     -h api.mystrength.dev  --name api.mystrength.dev \
+    --volumes-from=data.mystrength.dev \
     --link nginx:gemini.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
-    --link cassandra.mystrength.dev:cassandra.mystrength.dev \
     mystrength/api:${dockertag}
 }
 
@@ -331,16 +372,15 @@ echo "Running Tag ${dockertag}"
 docker rm -f $(docker ps -a | grep api.mystrength.dev | awk '{print $1}') > /dev/null 2>&1
 docker run -d -t  -p 9081:9081 -p 5050:5050  \
   --add-host=db.mystrength.dev:${ip} \
-  --volumes-from logging-data  \
   -e "MYSTRENGTH_ENV=NNieslanik" \
   -e VIRTUAL_HOST=api.mystrength.dev \
   -e VIRTUAL_PORT=9080 \
   -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
   -h api.mystrength.dev  --name api.mystrength.dev \
+  --volumes-from=data.mystrength.dev \
   --link nginx:gemini.mystrength.dev \
   --link elasticsearch-1:es.mystrength.dev \
   --link devrabbit:rabbit.mystrength.dev \
-  --link cassandra.mystrength.dev:cassandra.mystrength.dev \
   mystrength/api:${dockertag}
 }
 
@@ -360,7 +400,7 @@ mvn clean compile jar:jar package \
   && docker build -t mystrength/gemini:${dockertag} .
 docker rm -f $(docker ps -a | grep gemini.mystrength.dev | awk '{print $1}') > /dev/null 2>&1
 docker run -d -t -p 5051:5051 -p 5005:5005 -p 6810:6810  \
-  --volumes-from=data.mystrength.dev --volumes-from=logging-data  \
+  --volumes-from=data.mystrength.dev \
   --add-host=db.mystrength.dev:${ip} \
   -e "MYSTRENGTH_ENV=NNieslanik" \
   -e "DEBUG_MODE=true" \
@@ -393,7 +433,6 @@ function buildjobs() {
   docker rm -f $(docker ps -a | grep jobs-orchestrator.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t -p 5052:5052 \
      --add-host=db.mystrength.dev:${ip} \
-    --volumes-from logging-data  \
     -e "MYSTRENGTH_ENV=NNieslanik" \
     -e VIRTUAL_HOST=jobs-orchestrator.mystrength.dev \
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5052,server=y,suspend=y"  \
@@ -401,7 +440,6 @@ function buildjobs() {
     --link nginx:api.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
-    --link cassandra.mystrength.dev:cassandra.mystrength.dev \
     mystrength/jobs-orchestrator:${dockertag};
   popd;
   pushd executor;
@@ -409,7 +447,6 @@ function buildjobs() {
   docker rm -f $(docker ps -a | grep jobs-executor.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t -p 5053:5053 \
      --add-host=db.mystrength.dev:${ip} \
-    --volumes-from logging-data  \
     -e "MYSTRENGTH_ENV=NNieslanik" \
     -e VIRTUAL_HOST=jobs-executor.mystrength.dev \
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5053,server=y,suspend=y"  \
@@ -417,7 +454,6 @@ function buildjobs() {
     --link nginx:api.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
-    --link cassandra.mystrength.dev:cassandra.mystrength.dev \
     mystrength/jobs-executor:${dockertag};
   popd;
 
@@ -442,7 +478,6 @@ function buildpartnerapi() {
   docker rm -f $(docker ps -a | grep partner.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t  -p 5054:5054  \
      --add-host=db.mystrength.dev:${ip} \
-    --volumes-from logging-data  \
     -e "MYSTRENGTH_ENV=NNieslanik" \
     -e VIRTUAL_HOST=partner.mystrength.dev \
     -e VIRTUAL_PORT=9080 \
