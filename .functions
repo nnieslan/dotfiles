@@ -274,6 +274,7 @@ function buildapp() {
   echo "Local IP Address is ${ip}"
   echo "Building Tag ${dockertag}"
 
+  nvm install 6.9.1
   gulp && docker build -t mystrength/app:${dockertag} .
   docker rm -f $(docker ps -a | grep app.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t \
@@ -294,7 +295,7 @@ function buildadmin() {
 
   echo "Local IP Address is ${ip}"
   echo "Building Tag ${dockertag}"
-  nvm install 0.12.7
+  nvm install 6.9.1
   gulp && docker build -t mystrength/admin:${dockertag} .
   docker rm -f $(docker ps -a | grep admin.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t \
@@ -319,6 +320,7 @@ function buildanalytics() {
   docker rm -f $(docker ps -a | grep mystrength_analytics | awk '{print $1}')  > /dev/null 2>&1
   docker run -dt --name mystrength_analytics \
        --add-host=db.mystrength.dev:${ip} \
+       --link devrabbit:rabbit.mystrength.dev \
        -v /Users/NNieslanik/src/analytics/nightly/logs:/var/log/mystrength \
        -v /Users/NNieslanik/src/analytics/nightly/work:/home/work \
        -e ENV_NAME=nnieslanik \
@@ -326,6 +328,28 @@ function buildanalytics() {
        mystrength/analytics:${dockertag}
 }
 
+
+function buildrec() {
+  if [ -z "${1}" ]; then
+    echo "ERROR: No docker tag specified.";
+    return 1;
+  fi;
+  local dockertag="${1}";
+  local ip=$(ipconfig getifaddr en0);
+
+  echo "Local IP Address is ${ip}"
+  echo "Building Tag ${dockertag}"
+  docker build -f RecommenderDockerfile -t mystrength/recommenders:${dockertag} .
+  docker rm -f $(docker ps -a | grep recommenders.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
+  docker run -dt --name recommenders.mystrength.dev \
+       --add-host=db.mystrength.dev:${ip} \
+       --link devrabbit:rabbit.mystrength.dev \
+       -v /Users/NNieslanik/src/recommenders/logs:/var/log/mystrength \
+       -v /Users/NNieslanik/src/recommenders/work:/home/work \
+       -e ENV_NAME=nnieslanik \
+       --restart=on-failure:5 \
+       mystrength/recommenders:${dockertag}
+}
 
 function buildapi() {
   if [ -z "${1}" ]; then
@@ -437,6 +461,7 @@ function buildjobs() {
     -e VIRTUAL_HOST=jobs-orchestrator.mystrength.dev \
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5052,server=y,suspend=y"  \
     -h jobs-orchestrator.mystrength.dev  --name jobs-orchestrator.mystrength.dev \
+    --link nginx:gemini.mystrength.dev \
     --link nginx:api.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
@@ -451,6 +476,7 @@ function buildjobs() {
     -e VIRTUAL_HOST=jobs-executor.mystrength.dev \
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5053,server=y,suspend=y"  \
     -h jobs-executor.mystrength.dev  --name jobs-executor.mystrength.dev \
+    --link nginx:gemini.mystrength.dev \
     --link nginx:api.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
