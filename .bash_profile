@@ -23,6 +23,8 @@ unset file;
 #    && docker start cassandra.mystrength.dev;
 #fi;
 
+screenfetch
+
 # Case-insensitive globbing (used in pathname expansion)
 shopt -s nocaseglob;
 
