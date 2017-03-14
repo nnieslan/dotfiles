@@ -96,5 +96,15 @@ brew install tree
 brew install webkit2png
 brew install zopfli
 
+#Install other tools from work
+brew install rubocop
+brew install sonar-runner
+brew cask install owasp-zap
+
+# Install funstuff
+brew install screenfetch
+brew install htop
+brew install trash
+
 # Remove outdated versions from the cellar.
 brew cleanup
