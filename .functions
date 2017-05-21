@@ -510,9 +510,7 @@ function buildpartnerapi() {
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5054,server=y,suspend=y"  \
     -h partner.mystrength.dev  --name partner.mystrength.dev \
     --link nginx:api.mystrength.dev \
-    --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
-    --link cassandra.mystrength.dev:cassandra.mystrength.dev \
     mystrength/partner-api:${dockertag}
 }
 
