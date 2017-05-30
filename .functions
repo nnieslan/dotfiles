@@ -274,7 +274,7 @@ function buildapp() {
   echo "Local IP Address is ${ip}"
   echo "Building Tag ${dockertag}"
 
-  nvm install 6.9.1
+  nvm install 5.4.1
   gulp && docker build -t mystrength/app:${dockertag} .
   docker rm -f $(docker ps -a | grep app.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t \
@@ -295,7 +295,7 @@ function buildadmin() {
 
   echo "Local IP Address is ${ip}"
   echo "Building Tag ${dockertag}"
-  nvm install 6.9.1
+  nvm install 5.4.1
   gulp && docker build -t mystrength/admin:${dockertag} .
   docker rm -f $(docker ps -a | grep admin.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t \
