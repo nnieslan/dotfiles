@@ -522,6 +522,63 @@ function createBuildNumber() {
 
 }
 
+function buildRelease() {
+  if [ -z "${1}" ]; then
+    echo "ERROR: No old version to branch from specified.";
+    return 1;
+  fi;
+  if [ -z "${2}" ]; then
+    echo "ERROR: No new version to branch to specified.";
+    return 1;
+  fi;
+
+  local oldver="${1}";
+  local newver="${2}";
+
+  echo "Branching ${oldver} to ${newver} for all repos"
+  #API
+  cd ~/src/myStrengthApi
+  git checkout release/${oldver}
+  git pull
+  git go release/${newver}
+  git push -u origin release/${newver}
+
+  #admin
+  cd ~/src/myStrengthNewAdmin
+  git checkout release/${oldver}
+  git pull
+  git go release/${newver}
+  git push -u origin release/${newver}
+
+  #gemini
+  cd ~/src/myStrength
+  git checkout release/${oldver}
+  git pull
+  git go release/${newver}
+  git push -u origin release/${newver}
+
+  #app
+  cd ~/src/myStrength-UX
+  git checkout release/${oldver}
+  git pull
+  git go release/${newver}
+  git push -u origin release/${newver}
+
+  #partner-api
+  cd ~/src/partner-api
+  git checkout release/${oldver}
+  git pull
+  git go release/${newver}
+  git push -u origin release/${newver}
+
+  #webapp
+  cd ~/src/webapp
+  git checkout release/${oldver}
+  git pull
+  git go release/${newver}
+  git push -u origin release/${newver}
+}
+
 # Change cd function to enable to "back directory"
 function cd() {
         if [ $# -lt 1 ]; then

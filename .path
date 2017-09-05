@@ -1,2 +1,3 @@
-#add javahome to path
-export PATH="$HOME/bin:${JAVA_HOME}/bin:$PATH";
+#add javahome and rbenv to path
+export PATH="$HOME/bin:${JAVA_HOME}/bin:~/Library/Python/2.7/bin:$PATH";
+eval "$(rbenv init -)"
