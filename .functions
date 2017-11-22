@@ -379,6 +379,9 @@ function buildapi() {
     --link nginx:gemini.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
+    --memory="1G" \
+    --oom-kill-disable=false \
+    --restart=on-failure:2 \
     mystrength/api:${dockertag}
 }
 
@@ -395,17 +398,33 @@ echo "Running Tag ${dockertag}"
 
 docker rm -f $(docker ps -a | grep api.mystrength.dev | awk '{print $1}') > /dev/null 2>&1
 docker run -d -t  -p 9081:9081 -p 5050:5050  \
-  --add-host=db.mystrength.dev:${ip} \
   -e "MYSTRENGTH_ENV=NNieslanik" \
   -e VIRTUAL_HOST=api.mystrength.dev \
   -e VIRTUAL_PORT=9080 \
-  -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
+  -e "JAVA_OPTS=-Xmx1G -Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
   -h api.mystrength.dev  --name api.mystrength.dev \
+  -e runScheduledTasks=true \
+  -e runRabbitConsumers=true \
+  -e logPrefix="api-" \
   --volumes-from=data.mystrength.dev \
+  --link db.mystrength.dev:db.mystrength.dev \
   --link nginx:gemini.mystrength.dev \
   --link elasticsearch-1:es.mystrength.dev \
   --link devrabbit:rabbit.mystrength.dev \
+  -v /Users/NNieslanik/src/logging:/tmp/feeds \
+  -v /Users/NNieslanik/src/myStrengthApi/conf:/usr/local/share/mystrength/conf \
+  --memory="1G" \
+  --oom-kill-disable=false \
+  --restart=on-failure:2 \
   mystrength/api:${dockertag}
+}
+
+function builddbcontainer() {
+  docker run -d -t -p 3306:3306 \
+    --name db.mystrength.dev \
+    -v /Users/NNieslanik/src/mysql/data:/var/lib/mysql \
+    -v /Users/NNieslanik/src/mysql/conf:/etc/mysql/conf.d \
+    -e MYSQL_ROOT_PASSWORD=Test1234 -d mysql:5.6.37
 }
 
 function buildgemini() {
@@ -425,7 +444,6 @@ mvn clean compile jar:jar package \
 docker rm -f $(docker ps -a | grep gemini.mystrength.dev | awk '{print $1}') > /dev/null 2>&1
 docker run -d -t -p 5051:5051 -p 5005:5005 -p 6810:6810  \
   --volumes-from=data.mystrength.dev \
-  --add-host=db.mystrength.dev:${ip} \
   -e "MYSTRENGTH_ENV=NNieslanik" \
   -e "DEBUG_MODE=true" \
   -h gemini.mystrength.dev \
@@ -433,57 +451,14 @@ docker run -d -t -p 5051:5051 -p 5005:5005 -p 6810:6810  \
   -e VIRTUAL_HOST=gemini.mystrength.dev,mystrength.dev -e VIRTUAL_PORT=8080 \
   --link nginx:api.mystrength.dev \
   --link elasticsearch-1:es.mystrength.dev \
+  --link db.mystrength.dev:db.mystrength.dev \
+  --memory="1G" \
+  --oom-kill-disable=false \
+  --restart=on-failure:2 \
   mystrength/gemini:${dockertag} debug
 
 }
 
-function buildjobs() {
-  if [ -z "${1}" ]; then
-    echo "ERROR: No docker tag specified.";
-    return 1;
-  fi;
-  local dockertag="${1}";
-  local ip=$(ipconfig getifaddr en0);
-
-  echo "Local IP Address is ${ip}"
-  echo "Building Tag ${dockertag}"
-  mvn versions:set -DnewVersion=${dockertag} \
-   -DgenerateBackupPoms=false \
-   -DautoVersionSubmodules=true
-
-  mvn clean install -DskipITs=true;
-  pushd orchestrator;
-  docker build -t mystrength/jobs-orchestrator:${dockertag} .;
-  docker rm -f $(docker ps -a | grep jobs-orchestrator.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
-  docker run -d -t -p 5052:5052 \
-     --add-host=db.mystrength.dev:${ip} \
-    -e "MYSTRENGTH_ENV=NNieslanik" \
-    -e VIRTUAL_HOST=jobs-orchestrator.mystrength.dev \
-    -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5052,server=y,suspend=y"  \
-    -h jobs-orchestrator.mystrength.dev  --name jobs-orchestrator.mystrength.dev \
-    --link nginx:gemini.mystrength.dev \
-    --link nginx:api.mystrength.dev \
-    --link elasticsearch-1:es.mystrength.dev \
-    --link devrabbit:rabbit.mystrength.dev \
-    mystrength/jobs-orchestrator:${dockertag};
-  popd;
-  pushd executor;
-  docker build -t mystrength/jobs-executor:${dockertag} .;
-  docker rm -f $(docker ps -a | grep jobs-executor.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
-  docker run -d -t -p 5053:5053 \
-     --add-host=db.mystrength.dev:${ip} \
-    -e "MYSTRENGTH_ENV=NNieslanik" \
-    -e VIRTUAL_HOST=jobs-executor.mystrength.dev \
-    -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5053,server=y,suspend=y"  \
-    -h jobs-executor.mystrength.dev  --name jobs-executor.mystrength.dev \
-    --link nginx:gemini.mystrength.dev \
-    --link nginx:api.mystrength.dev \
-    --link elasticsearch-1:es.mystrength.dev \
-    --link devrabbit:rabbit.mystrength.dev \
-    mystrength/jobs-executor:${dockertag};
-  popd;
-
-}
 
 function buildpartnerapi() {
   if [ -z "${1}" ]; then
@@ -503,23 +478,57 @@ function buildpartnerapi() {
    && docker build -t mystrength/partner-api:${dockertag} .
   docker rm -f $(docker ps -a | grep partner.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
   docker run -d -t  -p 5054:5054  \
-     --add-host=db.mystrength.dev:${ip} \
     -e "MYSTRENGTH_ENV=NNieslanik" \
     -e VIRTUAL_HOST=partner.mystrength.dev \
     -e VIRTUAL_PORT=9080 \
-    -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5054,server=y,suspend=y"  \
+    -e "JAVA_OPTS=-Xmx1G -Xdebug -agentlib:jdwp=transport=dt_socket,address=5054,server=y,suspend=y"  \
     -h partner.mystrength.dev  --name partner.mystrength.dev \
+    --link db.mystrength.dev:db.mystrength.dev \
     --link nginx:api.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
+    --memory="1G" \
+    --oom-kill-disable=false \
+    --restart=on-failure:2 \
     mystrength/partner-api:${dockertag}
 }
 
+function tagRelease() {
+  if [ -z "${1}" ]; then
+    echo "ERROR: No branch specified.";
+    return 1;
+  fi;
 
+  git checkout ${1};
+  git pull;
 
-function createBuildNumber() {
-  local versionPrefix=$(echo "2.1-SNAPSHOT" | cut -d- -f1)
-  echo "Parsed version prefix sans SNAPSHOT ${versionPrefix}"
+  #set up version number for the branch and project
+  BRANCH_UPPER=$(echo "${1}" | tr [a-z] [A-Z] | tr / -)
 
+  BRANCH_OCTET_1=$(echo "${BRANCH_UPPER}" | cut -d- -f2 | cut -d. -f1 | sort -n | tail -1)
+  BRANCH_OCTET_2=$(echo "${BRANCH_UPPER}" | cut -d- -f2 | cut -d. -f2 | sort -n | tail -1)
+
+  CURRENT_VERSION=$(git tag -l RELEASE-${BRANCH_OCTET_1}.${BRANCH_OCTET_2}.* | sort | tail -1)
+  if [ "$CURRENT_VERSION" == "" ]
+  then
+  echo "No previous build number tag exists for this branch"
+  VERSION_OCTET_1=${BRANCH_OCTET_1}
+  VERSION_OCTET_2=${BRANCH_OCTET_2}
+  VERSION_OCTET_3=0
+
+  echo "${BRANCH_UPPER}"
+  echo "RELEASE-${BRANCH_OCTET_1}.${BRANCH_OCTET_2}.0"
+  else
+  echo "Previous build number tag was $CURRENT_VERSION"
+  VERSION_OCTET_3=$(git tag -l RELEASE-${BRANCH_OCTET_1}.${BRANCH_OCTET_2}.* | cut -d- -f2 | cut -d. -f3 | sort -n | tail -1)
+  fi
+
+  VERSION_OCTET_3=$((VERSION_OCTET_3+=1))
+
+  NEW_BUILD_VERSION=$(echo "${VERSION_OCTET_1}.${VERSION_OCTET_2}.${VERSION_OCTET_3}")
+  echo "Incrementing git tag version to '$NEW_BUILD_VERSION'"
+
+  git tag $NEW_BUILD_VERSION;
+  git push --tags
 }
 
 function buildRelease() {
@@ -534,45 +543,51 @@ function buildRelease() {
 
   local oldver="${1}";
   local newver="${2}";
+  local api_folder="myStrengthApi";
+  local admin_folder="myStrengthNewAdmin";
+  local gemini_folder="myStrength";
+  local app_folder="myStrength-UX";
+  local papi_folder="partner-api";
+  local wapp_folder="webapp";
 
   echo "Branching ${oldver} to ${newver} for all repos"
   #API
-  cd ~/src/myStrengthApi
+  cd ~/src/${api_folder}
   git checkout release/${oldver}
   git pull
   git go release/${newver}
   git push -u origin release/${newver}
 
   #admin
-  cd ~/src/myStrengthNewAdmin
+  cd ~/src/${admin_folder}
   git checkout release/${oldver}
   git pull
   git go release/${newver}
   git push -u origin release/${newver}
 
   #gemini
-  cd ~/src/myStrength
+  cd ~/src/${gemini_folder}
   git checkout release/${oldver}
   git pull
   git go release/${newver}
   git push -u origin release/${newver}
 
   #app
-  cd ~/src/myStrength-UX
+  cd ~/src/${app_folder}
   git checkout release/${oldver}
   git pull
   git go release/${newver}
   git push -u origin release/${newver}
 
   #partner-api
-  cd ~/src/partner-api
+  cd ~/src/${papi_folder}
   git checkout release/${oldver}
   git pull
   git go release/${newver}
   git push -u origin release/${newver}
 
   #webapp
-  cd ~/src/webapp
+  cd ~/src/${wapp_folder}
   git checkout release/${oldver}
   git pull
   git go release/${newver}
