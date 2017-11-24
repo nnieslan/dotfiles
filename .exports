@@ -22,9 +22,8 @@ export GREP_OPTIONS='--color=auto';
 
 export JAVA_HOME=$(/usr/libexec/java_home);
 export M2_HOME='/usr/local/Cellar/maven32/3.2.5/libexec';
-export RESIN_HOME='/users/nnieslanik/resin-4.0.43';
-export MYSTRENGTH_HOME='/users/nnieslanik/src/mystrength';
+export MYSTRENGTH_HOME='/users/nicknieslanik/src/mystrength';
 export ANT_HOME='/usr/local/Cellar/ant/1.9.4/libexec';
 
-export NVM_DIR="/Users/NNieslanik/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm

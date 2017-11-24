@@ -321,8 +321,8 @@ function buildanalytics() {
   docker run -dt --name mystrength_analytics \
        --add-host=db.mystrength.dev:${ip} \
        --link devrabbit:rabbit.mystrength.dev \
-       -v /Users/NNieslanik/src/analytics/nightly/logs:/var/log/mystrength \
-       -v /Users/NNieslanik/src/analytics/nightly/work:/home/work \
+       -v $HOME/src/analytics/nightly/logs:/var/log/mystrength \
+       -v $HOME/src/analytics/nightly/work:/home/work \
        -e ENV_NAME=nnieslanik \
        --restart=on-failure:5 \
        mystrength/analytics:${dockertag}
@@ -344,8 +344,8 @@ function buildrec() {
   docker run -dt --name recommenders.mystrength.dev \
        --add-host=db.mystrength.dev:${ip} \
        --link devrabbit:rabbit.mystrength.dev \
-       -v /Users/NNieslanik/src/recommenders/logs:/var/log/mystrength \
-       -v /Users/NNieslanik/src/recommenders/work:/home/work \
+       -v $HOME/src/recommenders/logs:/var/log/mystrength \
+       -v $HOME/src/recommenders/work:/home/work \
        -e ENV_NAME=nnieslanik \
        --restart=on-failure:5 \
        mystrength/recommenders:${dockertag}
@@ -411,8 +411,8 @@ docker run -d -t  -p 9081:9081 -p 5050:5050  \
   --link nginx:gemini.mystrength.dev \
   --link elasticsearch-1:es.mystrength.dev \
   --link devrabbit:rabbit.mystrength.dev \
-  -v /Users/NNieslanik/src/logging:/tmp/feeds \
-  -v /Users/NNieslanik/src/myStrengthApi/conf:/usr/local/share/mystrength/conf \
+  -v $HOME/src/logging:/tmp/feeds \
+  -v $HOME/src/myStrengthApi/conf:/usr/local/share/mystrength/conf \
   --memory="1G" \
   --oom-kill-disable=false \
   --restart=on-failure:2 \
@@ -422,8 +422,8 @@ docker run -d -t  -p 9081:9081 -p 5050:5050  \
 function builddbcontainer() {
   docker run -d -t -p 3306:3306 \
     --name db.mystrength.dev \
-    -v /Users/NNieslanik/src/mysql/data:/var/lib/mysql \
-    -v /Users/NNieslanik/src/mysql/conf:/etc/mysql/conf.d \
+    -v $HOME/src/mysql/data:/var/lib/mysql \
+    -v $HOME/src/mysql/conf:/etc/mysql/conf.d \
     -e MYSQL_ROOT_PASSWORD=Test1234 -d mysql:5.6.37
 }
 
