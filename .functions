@@ -328,29 +328,6 @@ function buildanalytics() {
        mystrength/analytics:${dockertag}
 }
 
-
-function buildrec() {
-  if [ -z "${1}" ]; then
-    echo "ERROR: No docker tag specified.";
-    return 1;
-  fi;
-  local dockertag="${1}";
-  local ip=$(ipconfig getifaddr en0);
-
-  echo "Local IP Address is ${ip}"
-  echo "Building Tag ${dockertag}"
-  docker build -f RecommenderDockerfile -t mystrength/recommenders:${dockertag} .
-  docker rm -f $(docker ps -a | grep recommenders.mystrength.dev | awk '{print $1}')  > /dev/null 2>&1
-  docker run -dt --name recommenders.mystrength.dev \
-       --add-host=db.mystrength.dev:${ip} \
-       --link devrabbit:rabbit.mystrength.dev \
-       -v $HOME/src/recommenders/logs:/var/log/mystrength \
-       -v $HOME/src/recommenders/work:/home/work \
-       -e ENV_NAME=nnieslanik \
-       --restart=on-failure:5 \
-       mystrength/recommenders:${dockertag}
-}
-
 function buildapi() {
   if [ -z "${1}" ]; then
     echo "ERROR: No docker tag specified.";
@@ -375,10 +352,11 @@ function buildapi() {
     -e VIRTUAL_PORT=9080 \
     -e "JAVA_OPTS=-Xdebug -agentlib:jdwp=transport=dt_socket,address=5050,server=y,suspend=y"  \
     -h api.mystrength.dev  --name api.mystrength.dev \
-    --volumes-from=data.mystrength.dev \
     --link nginx:gemini.mystrength.dev \
     --link elasticsearch-1:es.mystrength.dev \
     --link devrabbit:rabbit.mystrength.dev \
+    -v $HOME/src/logging:/tmp/feeds \
+    -v $HOME/src/api/conf:/usr/local/share/mystrength/conf \
     --memory="1G" \
     --oom-kill-disable=false \
     --restart=on-failure:2 \
@@ -406,13 +384,12 @@ docker run -d -t  -p 9081:9081 -p 5050:5050  \
   -e runScheduledTasks=true \
   -e runRabbitConsumers=true \
   -e logPrefix="api-" \
-  --volumes-from=data.mystrength.dev \
   --link db.mystrength.dev:db.mystrength.dev \
   --link nginx:gemini.mystrength.dev \
   --link elasticsearch-1:es.mystrength.dev \
   --link devrabbit:rabbit.mystrength.dev \
   -v $HOME/src/logging:/tmp/feeds \
-  -v $HOME/src/myStrengthApi/conf:/usr/local/share/mystrength/conf \
+  -v $HOME/src/api/conf:/usr/local/share/mystrength/conf \
   --memory="1G" \
   --oom-kill-disable=false \
   --restart=on-failure:2 \
@@ -543,10 +520,10 @@ function buildRelease() {
 
   local oldver="${1}";
   local newver="${2}";
-  local api_folder="myStrengthApi";
-  local admin_folder="myStrengthNewAdmin";
-  local gemini_folder="myStrength";
-  local app_folder="myStrength-UX";
+  local api_folder="api";
+  local admin_folder="admin";
+  local gemini_folder="gemini";
+  local app_folder="app";
   local papi_folder="partner-api";
   local wapp_folder="webapp";
 
