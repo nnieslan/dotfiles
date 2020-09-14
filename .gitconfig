@@ -136,6 +136,10 @@
 	renames = copies
 	tool = bc3
 
+[pager]
+  diff = diff-so-fancy | less --tabs=1,5 -RFX
+  show = diff-so-fancy | less --tabs=1,5 -RFX
+
 [help]
 
 	# Automatically correct and execute mistyped commands
@@ -152,7 +156,7 @@
 	# Use the Git 1.x.x default to avoid errors on machines with old Git
 	# installations. To use `simple` instead, add this to your `~/.extra` file:
 	# `git config --global push.default simple`. See http://git.io/mMah-w.
-	default = matching
+	default = current
 
 # URL shorthands
 
@@ -175,3 +179,7 @@
 [url "git://gist.github.com/"]
 
 	insteadOf = "gist:"
+
+[user]
+	email = nnieslanik@mystrength.com
+	name = Nick Nieslanik

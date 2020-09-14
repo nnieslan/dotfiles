@@ -6,6 +6,8 @@ alias .....="cd ../../../.."
 alias ~="cd ~" # `cd` is probably faster to type though
 alias -- -="cd -"
 
+alias screenfetch='screenfetch 2>/dev/null'
+
 # Shortcuts
 alias dl="cd ~/Downloads"
 alias dt="cd ~/Desktop"
@@ -22,7 +24,8 @@ alias analytics="cd ~/src/myStrength_Analytics"
 alias papi="cd ~/src/partner-api"
 alias res="cd ~/src/resources"
 alias dotfiles="cd ~/src/dotfiles"
-
+alias cat='lolcat'
+alias lr="tree -afipuh"
 
 #new SSH
 alias dtshost="ssh nnieslanik@dtshost.mystrength"
